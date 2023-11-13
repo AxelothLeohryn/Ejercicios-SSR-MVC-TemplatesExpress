@@ -3,10 +3,10 @@ const express = require("express");
 const app = express();
 const port = 3000;
 
-const fetchFilm = require("./utils/fetch.js");
+const fetch = require("./utils/fetch.js");
 
 // Middleware para analizar el cuerpo del formulario, similar a como usabamos express.json() para postear json
-app.use(express.urlencoded());
+app.use(express.urlencoded({ extended: true }));
 
 //Configuracion de Pug
 app.set("view engine", "pug");
@@ -18,16 +18,25 @@ app.get("/", (req, res) => {
 
 app.post("/film/", (req, res) => {
   //Lo que ocurre cuando se envía el formulario (tipo POST):
-  const title = req.body.title; //Obtenemos el input llamado "title" del formulario, necesita (express.urlencoded())
-  res.redirect(`/film/${title}`); //Redirigimos a film/"title"
+  const title = req.body.title;
+  if (title) {
+    res.redirect(`/film/${title}`); //Redirigimos a film/"title"
+    
+} else {
+  res.render("error")
+  }
 });
 
 app.get("/film/:title", async (req, res) => {
   //Lo que ocurre cuando llegamos a film/"title":
   const title = req.params.title;
-  const movieDetails = await fetchFilm.fetchFilm(title);
-//   console.log(movieDetails);
-  res.render("film", { movieDetails });
+  const movieDetails = await fetch.getFilm(title);
+  if (movieDetails.Response === "True") {
+      console.log(movieDetails);
+    res.render("film", { movieDetails });
+  } else {
+    res.render("error");
+  }
 });
 
 app.listen(port, function () {
